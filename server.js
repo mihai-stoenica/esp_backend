@@ -6,6 +6,8 @@ const PORT = process.env.PORT || 3000;
 // Default LED state (can be toggled)
 let ledState = "off";
 
+app.use(express.static('public'))
+
 app.get('/command', (req, res) => {
   res.json({ led: ledState });
 });
