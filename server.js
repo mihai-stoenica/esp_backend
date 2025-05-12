@@ -11,6 +11,13 @@ const wss = new WebSocket.Server({ server });
 
 let espSocket = null;
 
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static('public')); // Serve static files from 'public' directory
+app.get('/', (req, res) => {
+  res.sendFile(__dirname + '/public/index.html'); // Serve the HTML file
+});
+
 wss.on('connection', (ws, req) => {
   console.log('Client connected');
 
