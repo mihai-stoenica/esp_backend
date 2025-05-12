@@ -1,35 +1,21 @@
-<!-- public/index.html -->
 <!DOCTYPE html>
 <html>
-<head>
-  <title>ESP32 Control</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin-top: 50px;
-    }
-    button {
-      font-size: 1.5rem;
-      padding: 1em 2em;
-      margin: 1em;
-    }
-  </style>
-</head>
-<body>
-  <h1>ESP32 LED Control</h1>
-  <button onclick="sendCommand('on')">Turn ON</button>
-  <button onclick="sendCommand('off')">Turn OFF</button>
+  <body>
+    <h2>Plant Monitor</h2>
+    <p id="humidity">Waiting for data...</p>
+    <button onclick="sendWater()">Water</button>
 
-  <script>
-    function sendCommand(state) {
-      fetch(`/set-led/${state}`)
-        .then(res => res.text())
-        .then(console.log)
-        .catch(err => alert("Failed to send command"));
-    }
-  </script>
-</body>
+    <script>
+      const ws = new WebSocket("ws://your-server.com");
+
+      ws.onmessage = (event) => {
+        const msg = JSON.parse(event.data);
+        document.getElementById("humidity").innerText = `Humidity: ${msg.humidity}`;
+      };
+
+      function sendWater() {
+        fetch("/water", { method: "POST" });
+      }
+    </script>
+  </body>
 </html>
