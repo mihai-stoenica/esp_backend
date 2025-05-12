@@ -1,39 +1,26 @@
-// ws-server.js
-const WebSocket = require('ws');
+// server.js
+const express = require('express');
+const app = express();
+const PORT = process.env.PORT || 3000;
 
-const wss = new WebSocket.Server({ port: 8080 });
+// Default LED state (can be toggled)
+let ledState = "off";
 
-let ledState = 'off';
+app.use(express.static('public'))
 
-wss.on('connection', function connection(ws) {
-  console.log('ESP32 connected');
-
-  // Send initial state
-  ws.send(ledState);
-
-  // Receive message from client
-  ws.on('message', function incoming(message) {
-    console.log('Received from ESP32:', message);
-  });
+app.get('/command', (req, res) => {
+  res.json({ led: ledState });
 });
 
-// Optional: change LED state manually from this file
-const readline = require('readline');
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
+app.get('/set-led/:state', (req, res) => {
+  const state = req.params.state.toLowerCase();
+  if (state === "on" || state === "off") {
+    ledState = state;
+    return res.send(`LED state set to ${state}`);
+  }
+  res.status(400).send("Invalid state. Use 'on' or 'off'.");
 });
 
-function prompt() {
-  rl.question('Set LED state (on/off): ', (input) => {
-    ledState = input;
-    // Broadcast to all connected clients
-    wss.clients.forEach((client) => {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(ledState);
-      }
-    });
-    prompt();
-  });
-}
-prompt();
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
