@@ -1,42 +1,56 @@
-const express = require("express");
-const http = require("http");
-const WebSocket = require("ws");
+import express from 'express';
+import cors from 'cors';
+import mongoose from 'mongoose';
+import dotenv from 'dotenv';
+import { connectToDb } from './db.js'; 
+import { Humidity } from './models/Humidity.js'; 
+
+dotenv.config();
 
 const app = express();
-const server = http.createServer(app);
-const wss = new WebSocket.Server({ server });
+const PORT = process.env.PORT || 5000;
 
+
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static('public')); 
+app.use(express.static('public'));
+
+await connectToDb(); 
+
 app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/public/index.html'); // Serve the HTML file
+  res.sendFile(new URL('./public/index.html', import.meta.url).pathname); 
 });
 
-// WebSocket logic
-wss.on("connection", (ws) => {
-  console.log("WebSocket connected");
+app.post('/api/humidity', async (req, res) => {
+  const { humidity } = req.body;
+  if (typeof humidity !== 'number') {
+    return res.status(400).json({ error: 'Invalid humidity value' });
+  }
+  try {
+    const humidityDocument = new Humidity({ humidity });
+    await humidityDocument.save();
+    console.log(`Humidity logged: ${humidity}`);
+    res.status(201).json({ message: 'Humidity logged successfully' });
+  } catch (error) {
+    console.error('Error saving humidity:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 
-  ws.on("message", (message) => {
-    console.log("Received:", message);
-    // Example: echo or process humidity
-    if (message.toString().startsWith("{")) {
-      // parse and process humidity
-    } else {
-      // maybe send control message back
-      ws.send("WATER");
-    }
-  });
-
-  ws.on("close", () => {
-    console.log("WebSocket disconnected");
-  });
+  
 });
 
-// Start both HTTP and WebSocket on port 8080
-server.listen(8080, () => {
-  console.log("HTTP & WebSocket server listening on port 8080");
+app.get('/api/log', async (req, res) => {
+  try {
+    const humidityLogs = await Humidity.find().sort({ timestamp: -1 }).limit(100);
+    res.json(humidityLogs);
+  } catch (error) {
+    console.error('Error fetching humidity logs:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 
-
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
