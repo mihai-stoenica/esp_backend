@@ -4,7 +4,8 @@
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "nodemon server.js"
   },
   "type": "module",
   "keywords": [],
@@ -17,5 +18,8 @@
     "express": "^5.1.0",
     "mongoose": "^8.14.3",
     "ws": "^8.18.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
   }
 }
