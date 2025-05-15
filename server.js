@@ -42,7 +42,7 @@ app.post('/api/humidity', async (req, res) => {
 
 app.get('/api/log', async (req, res) => {
   try {
-    const humidityLogs = await Humidity.find().sort({ timestamp: -1 }).limit(100);
+    const humidityLogs = await Humidity.find().sort({ timestamp: 1 }).limit(100);
     res.json(humidityLogs);
   } catch (error) {
     console.error('Error fetching humidity logs:', error);
