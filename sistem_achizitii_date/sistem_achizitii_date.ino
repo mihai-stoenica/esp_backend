@@ -2,14 +2,15 @@
 #include <HTTPClient.h>
 
 #define SENSOR_PIN 34     
-#define MOTOR_PIN 25
+#define MOTOR_PIN 33
 
 const char* ssid = "DIGI_c19b09";
 const char* password = "6db1c892";
 const char* serverUrl = "https://espbackend-production.up.railway.app/api/humidity"; // Replace with your actual URL
 
-  // Analog input pin for moisture sensor
-  // GPIO for relay or motor control
+const int dryValue = 3500;
+const int wetValue = 800;
+
 
 void setup() {
   Serial.begin(115200);
@@ -26,21 +27,32 @@ void setup() {
 }
 
 void loop() {
-  int rawValue = analogRead(SENSOR_PIN);
-  Serial.print("Raw ADC Value: ");
-  Serial.print(rawValue);
-  int dryValue = 3500;   // Value when sensor is fully dry
-  int wetValue = 1000;   // Value when sensor is in water
-  int humidityPercent = map(rawValue, dryValue, wetValue, 0, 100);
+  float sum = 0;
+  int reads = 0;
 
-  humidityPercent = constrain(humidityPercent, 0, 100);
-  Serial.printf("Humidity: %d%%\n", humidityPercent);
+  while(reads <3) {
 
-  if (humidityPercent < 20) {
+    int rawValue = analogRead(SENSOR_PIN);
+    Serial.print("Raw ADC Value: ");
+    Serial.print(rawValue);
+    int humidityPercent = map(rawValue, dryValue, wetValue, 0, 100);
+    humidityPercent = constrain(humidityPercent, 0, 100);
+
+    sum += humidityPercent;
+    reads++;
+    
+    delay(600000);
+  }
+
+
+  int avgHumidityPercent = sum/reads;
+  Serial.printf("Humidity: %d%%\n", avgHumidityPercent);
+
+  if (avgHumidityPercent < 40) {
     Serial.println("Humidity low! Turning motor ON");
-    //digitalWrite(MOTOR_PIN, HIGH);
-    //delay(5000);
-    //digitalWrite(MOTOR_PIN, LOW);
+    digitalWrite(MOTOR_PIN, HIGH);
+    delay(50);
+    digitalWrite(MOTOR_PIN, LOW);
     Serial.println("Motor OFF");
   }
 
@@ -50,7 +62,7 @@ void loop() {
     http.begin(serverUrl);
     http.addHeader("Content-Type", "application/json");
 
-    String payload = "{\"humidity\": " + String(humidityPercent) + "}";
+    String payload = "{\"humidity\": " + String(avgHumidityPercent) + "}";
     int httpResponseCode = http.POST(payload);
 
     Serial.printf("Server response: %d\n", httpResponseCode);
@@ -58,6 +70,4 @@ void loop() {
   } else {
     Serial.println("WiFi not connected!");
   }
-
-  delay(600000); 
 }

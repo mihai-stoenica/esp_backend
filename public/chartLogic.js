@@ -1,5 +1,5 @@
 const itemsPerPage = 10;
-let currentPage = 9;
+let currentPage = 0;
 let processedData = [];
 let chart;
 
@@ -9,6 +9,7 @@ async function fetchHumidityData() {
         if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
         const data = await response.json();
         console.log('Raw API data:', data);
+        currentPage = Math.floor(data.length / itemsPerPage);
         return data;
     } catch (error) {
         console.error('Error fetching data:', error);
