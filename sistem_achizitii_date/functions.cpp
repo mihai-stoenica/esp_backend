@@ -1,17 +1,17 @@
-#include <Arduino.h>
-#include <ArduinoJson.h>
 #include <WiFi.h>
 #include <WebSocketsClient.h>
+#include <Arduino.h>
+#include <ArduinoJson.h>
 #include <HTTPClient.h>
 #include "functions.h"
+
 
 float sampleSum = 0;
 int sampleCount = 0;
 
-unsigned long lastSent = 0;
+unsigned long lastSampleTime = 0;
 
 void connectToNetwork() {
-  
   WiFi.begin(ssid, password);
   Serial.print("Connecting to WiFi");
   while (WiFi.status() != WL_CONNECTED) {
@@ -23,29 +23,26 @@ void connectToNetwork() {
 
 void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
   switch(type) {
+    case WStype_DISCONNECTED:
+      Serial.println("WebSocket Disconnected");
+      break;
     case WStype_CONNECTED:
       Serial.println("WebSocket Connected");
-      webSocket.sendTXT("{\"event\":\"register\",\"client\":\"esp32\"}");
+      webSocket.sendTXT("{\"event\":\"register\", \"client\":\"esp32\"}"); //this
       break;
     case WStype_TEXT:
       Serial.printf("Received: %s\n", payload);
-      DynamicJsonDocument doc(256);
-      deserializeJson(doc, payload);
-      if (doc["event"] == "motor") {
-        int seconds = doc["seconds"];
-        Serial.printf("Motor ON for %d seconds\n", seconds);
-        digitalWrite(MOTOR_PIN, HIGH);
-        delay(seconds * 1000);
-        digitalWrite(MOTOR_PIN, LOW);
-      }
+      break;
+    default:
       break;
   }
 }
 
 void setupWebSocket() {
-  webSocket.beginSSL(wsUrl, 443, "/");
+  webSocket.beginSSL("espbackend-production.up.railway.app", 443, "/api/ws");
   webSocket.onEvent(webSocketEvent);
   webSocket.setReconnectInterval(5000);
+  webSocket.enableHeartbeat(15000, 3000, 2);
 }
 
 int takeSample() {
@@ -60,47 +57,50 @@ int takeSample() {
   return humidity;
 }
 
-void processAndSend(int &sum, int &reads) {
-  while (reads < 3) {
-    unsigned long now = millis();
-    if (now - lastSent > 600000) {  // 10 minutes
-      lastSent = now;
-      int sample = takeSample();
-      sum += sample;
-      reads++;
+void processAndSend(int &sum, int &reads, unsigned long now) {
+  // Sample every 10 minutes (600000 ms)
+  if (reads < 3 && now - lastSampleTime >= 600000) {
+    lastSampleTime = now;
+    int sample = takeSample();
+    sum += sample;
+    reads++;
+    Serial.printf("Sample %d taken: %d\n", reads, sample);
+  }
+
+  // Once we have 3 samples, calculate average and send
+  if (reads == 3) {
+    int avgHumidity = sum / 3;
+    Serial.printf("Average Humidity: %d%%\n", avgHumidity);
+
+    sum = 0;
+    reads = 0;
+
+    // Activate motor if humidity too low
+    if (avgHumidity < 40) {
+      Serial.println("Humidity low! Turning motor ON");
+      digitalWrite(MOTOR_PIN, HIGH);
+      delay(100); // 100 ms motor activation
+      digitalWrite(MOTOR_PIN, LOW);
+      Serial.println("Motor OFF");
+    }
+
+    // Send to server
+    if (WiFi.status() == WL_CONNECTED) {
+      HTTPClient http;
+      http.begin(serverUrl);
+      http.addHeader("Content-Type", "application/json");
+
+      String payload = "{\"humidity\": " + String(avgHumidity) + "}";
+      int httpResponseCode = http.POST(payload);
+      Serial.printf("Server response: %d\n", httpResponseCode);
+      http.end();
     } else {
-      return;  
+      Serial.println("WiFi not connected!");
     }
   }
 
-  int avgHumidity = sum / reads;
-  Serial.printf("Humidity: %d%%\n", avgHumidity);
-
-  sum = 0;
-  reads = 0;
-
-  if (avgHumidity < 40) {
-    Serial.println("Humidity low! Turning motor ON");
-    digitalWrite(MOTOR_PIN, HIGH);
-    delay(100);
-    digitalWrite(MOTOR_PIN, LOW);
-    Serial.println("Motor OFF");
-  }
-
-  if (WiFi.status() == WL_CONNECTED) {
-    HTTPClient http;
-    http.begin(serverUrl);
-    http.addHeader("Content-Type", "application/json");
-
-    String payload = "{\"humidity\": " + String(avgHumidity) + "}";
-    int httpResponseCode = http.POST(payload);
-
-    Serial.printf("Server response: %d\n", httpResponseCode);
-    http.end();
-  } else {
-    Serial.println("WiFi not connected!");
-  }
 }
+
 
 void sendHumidity(int humidity) {
   DynamicJsonDocument doc(128);
@@ -109,5 +109,10 @@ void sendHumidity(int humidity) {
 
   String message;
   serializeJson(doc, message);
+  Serial.println(message);
   webSocket.sendTXT(message);
+}
+
+void turnOnMotor(int seconds) {
+  
 }

@@ -92,7 +92,7 @@
         const ws = new WebSocket("wss://espbackend-production.up.railway.app/"); 
 
         ws.onopen = () => {
-            console.log("WebSocket connected");
+            console.log("WebSocket connected to frontend");
         };
 
         ws.onmessage = (messageEvent) => {
