@@ -89,7 +89,28 @@
     </div>
 
     <script>
-        
+        const ws = new WebSocket("wss://espbackend-production.up.railway.app/"); 
+
+        ws.onopen = () => {
+            console.log("WebSocket connected");
+        };
+
+        ws.onmessage = (messageEvent) => {
+        const data = JSON.parse(messageEvent.data);
+
+        if (data.event === "humidity" && typeof data.value === "number") {
+            console.log("Received humidity update:", data.value);
+            updateHumidity(data.value);
+        }
+        };
+
+        function updateHumidity(h) {
+            const humidityElement = document.getElementById("humidityDisplay");
+            if (humidityElement) {
+                humidityElement.textContent = `${h}%`;
+            }
+        }
+
     </script>
    
     

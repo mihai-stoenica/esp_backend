@@ -71,8 +71,7 @@ wss.on('connection', (ws, req) => {
 
       if (data.event === 'humidity' && typeof data.value === 'number') {
         console.log(`Received humidity: ${data.value}`);
-        console.log(`Broadcasting humidity: ${data.value}`);
-
+        // The logic here
         for (const client of clients) {
           if (client !== ws && client.readyState === ws.OPEN) {
             client.send(JSON.stringify({ event: 'humidity', value: data.value }));
