@@ -13,10 +13,6 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-
-
-
-
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -75,7 +71,7 @@ wss.on('connection', (ws, req) => {
 
       if (data.event === 'humidity' && typeof data.value === 'number') {
         console.log(`Received humidity: ${data.value}`);
-        updateHumidity(data.value);
+        console.log(`Broadcasting humidity: ${data.value}`);
 
         for (const client of clients) {
           if (client !== ws && client.readyState === ws.OPEN) {
