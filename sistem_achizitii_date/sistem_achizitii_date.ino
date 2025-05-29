@@ -28,6 +28,7 @@ void setup() {
 //live humidity
 unsigned long lastSendTime = 0;
 const unsigned long sendInterval = 5000;
+int lastSentHumidity = 0;
 
 void loop() {
   webSocket.loop();
@@ -37,7 +38,11 @@ void loop() {
 
   if (now - lastSendTime >= sendInterval) {
     int currentHumidity = takeSample();
-    lastSendTime = now;
-    sendHumidity(currentHumidity);
+    if(currentHumidity != lastSentHumidity) {
+      lastSendTime = now;
+      sendHumidity(currentHumidity);
+      lastSentHumidity = currentHumidity;
+    }
+    
   }
 }

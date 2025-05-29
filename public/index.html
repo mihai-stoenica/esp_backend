@@ -4,92 +4,55 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Soil Humidity Dashboard</title>
-    <script src="/chartLogic.js" defer></script>
-    <script src="/humidityLogic.js" defer></script>
-    <script src="/motorLogic.js" defer></script>
+    <link rel="stylesheet" href="styles/styles.css">
+    <script src="/scripts/liveHumiditiesChart.js" defer></script>
+    <script src="/scripts/humiditiesChart.js" defer></script>
+    <script src="/scripts/motorLogic.js" defer></script>
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background-color: #f4f4f9;
-            margin: 0;
-            padding: 20px;
-            display: grid;
-            grid-template-columns: 1fr 1fr; 
-            gap: 20px; 
-        }
-        h1 {
-            color: #333;
-        }
-        #humidityChart {
-            max-width: 800px;
-            width: 100%;
-            height: 100px;
-        }
-        #errorMessage {
-            color: red;
-            margin-top: 20px;
-        }
-        #dataPreview {
-            margin-top: 20px;
-            max-width: 800px;
-            background-color: #fff;
-            padding: 10px;
-            border: 1px solid #ccc;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-         .left-column, .right-column {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            height: 750px;
-        }
-        
-
-       
-        
-    </style>
+    
 </head>
 <body>
-    <div class="left-column">
-        <h1>Soil Humidity Over Time</h1>
-        <canvas id="humidityChart"></canvas>
-        <div style="display: flex; flex-direction: row; margin-top: 20px; align-items: center; padding: 2px 0px;">
-            <button id="prevBtn"><</button>
-            <p id="pageIndicator" style="margin: 0 10px;"></p>
-            <button id="nextBtn">></button>
-        </div>
-        
-        <div id="errorMessage"></div>
-        <div id="dataPreview"></div>
-        <button onclick = "fetchLatest()"></button>
-        <span id="latestHumidity"></span>
-        <p id="message"></p>
-    </div>
-    <div class="right-column">
-        <h1>Metrics</h1>
-        <div id="metrics">
-            <p>Average Humidity: <span id="averageHumidity"></span></p>
-        </div>
-        <div id="liveHumidityChartContainer">
-            <canvas id="liveHumidityChart"></canvas>
+    
+    <div id="container">
+        <div class="left-column">
+            <h1>Soil Humidity Over Time</h1>
+            <canvas id="humidityChart"></canvas>
+            <div style="display: flex; flex-direction: row; margin-top: 20px; align-items: center; padding: 2px 0px;">
+                <button id="prevBtn"><</button>
+                <p id="pageIndicator" style="margin: 0 10px;"></p>
+                <button id="nextBtn">></button>
+            </div>
+            
+            <div id="errorMessage"></div>
+            <div id="dataPreview"></div>
+            
+            <p id="message"></p>
         </div>
 
-        <div>
-            <input id="motorDuration" type="number" placeholder="Seconds" min="1" />
-            <button onclick="activateMotor()">Activate Motor</button>
-        </div>
+        <div class="right-column">
+            
+            <div id="metrics">
+                <h1>Metrics</h1>
+                <p>Average Humidity: <span id="averageHumidity"></span></p>
+                
+            </div>
+            <div id="controlPanel">
+                <h1>Control controlPanel</h1>
+                <div id="liveHumidityChartContainer">
+                    <canvas id="liveHumidityChart"></canvas>
+                </div>
 
+                <div>
+                    <input id="motorDuration" type="number" placeholder="Seconds" min="1" />
+                    <button onclick="activateMotor()">Activate Motor</button>
+                </div>
+
+            </div>
+
+        </div>
     </div>
+    
 
     <script>
         const ws = new WebSocket('wss://espbackend-production.up.railway.app'); 

@@ -5,7 +5,8 @@
     const centerTextPlugin = {
             id: 'centerText',
             afterDraw(chart) {
-                const { ctx, chartArea: { width, height } } = chart;
+                if (chart.canvas.id === 'liveHumidityChart' && chart.config.type === 'doughnut') {
+                    const { ctx, chartArea: { width, height } } = chart;
                 ctx.save();
                 ctx.font = 'bold 30px Arial';
                 ctx.textAlign = 'center';
@@ -15,6 +16,8 @@
                 const centerY = height / 2;
                 ctx.fillText(`${humidity}%`, centerX, centerY);
                 ctx.restore();
+                }
+                
             }
     };
 

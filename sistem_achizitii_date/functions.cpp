@@ -9,6 +9,8 @@
 float sampleSum = 0;
 int sampleCount = 0;
 
+bool motorWasOn = false;
+
 unsigned long lastSampleTime = 0;
 
 void connectToNetwork() {
@@ -101,12 +103,15 @@ void processAndSend(int &sum, int &reads, unsigned long now) {
     reads = 0;
 
     // Activate motor if humidity too low
-    if (avgHumidity < 40) {
+    if (avgHumidity < 40 && !motorWasOn) {
+      motorWasOn = true;
       Serial.println("Humidity low! Turning motor ON");
       digitalWrite(MOTOR_PIN, HIGH);
       delay(100); // 100 ms motor activation
       digitalWrite(MOTOR_PIN, LOW);
       Serial.println("Motor OFF");
+    } else if(avgHumidity > 45) {
+      motorWasOn = false;
     }
 
     // Send to server
