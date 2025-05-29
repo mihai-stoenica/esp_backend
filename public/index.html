@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Soil Humidity Dashboard</title>
     <script src="/chartLogic.js" defer></script>
+    <script src="/motorLogic.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
     <style>
         body {
@@ -66,12 +67,24 @@
         
         <div id="errorMessage"></div>
         <div id="dataPreview"></div>
+        <button onclick = "fetchLatest()"></button>
+        <span id="latestHumidity"></span>
+        <p id="message"></p>
     </div>
     <div class="right-column">
         <h1>Metrics</h1>
         <div id="metrics">
             <p>Average Humidity: <span id="averageHumidity"></span></p>
         </div>
+        <div>
+            <h3>Humidity: <span id="humidityDisplay">--</span></h3>
+        </div>
+
+        <div>
+            <input id="motorDuration" type="number" placeholder="Seconds" min="1" />
+            <button onclick="activateMotor()">Activate Motor</button>
+        </div>
+
     </div>
 
     <script>

@@ -1,14 +1,19 @@
 import express from 'express';
 import cors from 'cors';
-import mongoose from 'mongoose';
+//import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import { connectToDb } from './db.js'; 
 import { Humidity } from './models/Humidity.js'; 
+import { WebSocketServer } from 'ws';
+import http from 'http';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+
+
 
 
 app.use(cors());
@@ -51,6 +56,58 @@ app.get('/api/log', async (req, res) => {
 });
 
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+//Web Socket setup
+
+const server = http.createServer(app);
+const wss = new WebSocketServer({ server });
+
+const clients = new Set();
+let esp32Socket = null;
+
+wss.on('connection', (ws, req) => {
+  console.log('New WebSocket connection');
+  clients.add(ws);
+
+  ws.on('message', async (message) => {
+    try {
+      const data = JSON.parse(message.toString());
+
+      if (data.event === 'humidity' && typeof data.value === 'number') {
+        const humidityDoc = new Humidity({ humidity: data.value });
+        await humidityDoc.save();
+        console.log(`Humidity saved: ${data.value}`);
+
+        for (const client of clients) {
+          if (client !== ws && client.readyState === ws.OPEN) {
+            client.send(JSON.stringify({ event: 'humidity', value: data.value }));
+          }
+        }
+
+      } else if (data.event === 'register' && data.client === 'esp32') {
+        esp32Socket = ws;
+        console.log('ESP32 registered');
+
+      } else if (data.event === 'motor' && typeof data.seconds === 'number') {
+        console.log(`Motor activation requested for ${data.seconds} seconds`);
+        if (esp32Socket && esp32Socket.readyState === ws.OPEN) {
+          esp32Socket.send(JSON.stringify({ event: 'motor', seconds: data.seconds }));
+        }
+      }
+
+    } catch (err) {
+      console.error('Error handling WebSocket message:', err);
+    }
+  });
+
+  ws.on('close', () => {
+    clients.delete(ws);
+    if (ws === esp32Socket) esp32Socket = null;
+    console.log('WebSocket disconnected');
+  });
 });
+
+server.listen(PORT, () => {
+  console.log(`Server + WS listening on port ${PORT}`);
+});
+
+
