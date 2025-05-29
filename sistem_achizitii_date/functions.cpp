@@ -26,13 +26,38 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
     case WStype_DISCONNECTED:
       Serial.println("WebSocket Disconnected");
       break;
+
     case WStype_CONNECTED:
       Serial.println("WebSocket Connected");
       webSocket.sendTXT("{\"event\":\"register\", \"client\":\"esp32\"}"); //this
       break;
-    case WStype_TEXT:
+
+    case WStype_TEXT: {
       Serial.printf("Received: %s\n", payload);
+
+      DynamicJsonDocument doc(256);
+      DeserializationError error = deserializeJson(doc, payload);
+      if (error) {
+        Serial.print("deserializeJson() failed: ");
+        Serial.println(error.c_str());
+        return;
+      }
+
+      const char* event = doc["event"];
+      
+      if (strcmp(event, "motor") == 0) {
+        int duration = doc["seconds"] | 0; 
+        Serial.printf("Motor event received! Duration: %d ms\n", duration);
+        digitalWrite(MOTOR_PIN, HIGH);
+        delay(duration * 1000);
+        digitalWrite(MOTOR_PIN, LOW);
+        Serial.println("Motor OFF");
+      }
+
       break;
+    }
+      
+
     default:
       break;
   }
@@ -111,8 +136,4 @@ void sendHumidity(int humidity) {
   serializeJson(doc, message);
   Serial.println(message);
   webSocket.sendTXT(message);
-}
-
-void turnOnMotor(int seconds) {
-  
 }

@@ -9,6 +9,7 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length);
 int takeSample();
 void processAndSend(int &sum, int &reads, unsigned long now);
 void sendHumidity(int humidity);
+void checkForMotor(int seconds);
 
 extern const int SENSOR_PIN;
 extern const int MOTOR_PIN;

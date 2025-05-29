@@ -18,6 +18,8 @@ int reads = 0, sum = 0;
 WebSocketsClient webSocket;
 
 void setup() {
+  pinMode(MOTOR_PIN, OUTPUT);
+  digitalWrite(MOTOR_PIN, LOW);
   Serial.begin(115200);
   connectToNetwork();
   setupWebSocket();
@@ -25,13 +27,13 @@ void setup() {
 
 //live humidity
 unsigned long lastSendTime = 0;
-const unsigned long sendInterval = 10000;
+const unsigned long sendInterval = 5000;
 
 void loop() {
   webSocket.loop();
   unsigned long now = millis();
 
-  processAndSend(sum, reads, now);
+  //processAndSend(sum, reads, now);
 
   if (now - lastSendTime >= sendInterval) {
     int currentHumidity = takeSample();

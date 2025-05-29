@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Soil Humidity Dashboard</title>
     <script src="/chartLogic.js" defer></script>
+    <script src="/humidityLogic.js" defer></script>
     <script src="/motorLogic.js" defer></script>
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
@@ -52,6 +53,8 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             height: 750px;
         }
+        
+
        
         
     </style>
@@ -77,8 +80,8 @@
         <div id="metrics">
             <p>Average Humidity: <span id="averageHumidity"></span></p>
         </div>
-        <div>
-            <h3>Humidity: <span id="humidityDisplay">--</span></h3>
+        <div id="liveHumidityChartContainer">
+            <canvas id="liveHumidityChart"></canvas>
         </div>
 
         <div>
@@ -89,27 +92,15 @@
     </div>
 
     <script>
-        const ws = new WebSocket("wss://espbackend-production.up.railway.app/"); 
+        const ws = new WebSocket('wss://espbackend-production.up.railway.app'); 
 
-        ws.onopen = () => {
-            console.log("WebSocket connected to frontend");
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+
+            if (data.event === 'humidity' && typeof data.value === 'number') {
+                updateHumidity(data.value);
+            } 
         };
-
-        ws.onmessage = (messageEvent) => {
-        const data = JSON.parse(messageEvent.data);
-
-        if (data.event === "humidity" && typeof data.value === "number") {
-            console.log("Received humidity update:", data.value);
-            updateHumidity(data.value);
-        }
-        };
-
-        function updateHumidity(h) {
-            const humidityElement = document.getElementById("humidityDisplay");
-            if (humidityElement) {
-                humidityElement.textContent = `${h}%`;
-            }
-        }
 
     </script>
    
