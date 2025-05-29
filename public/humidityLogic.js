@@ -1,4 +1,4 @@
-export function updateHumidity(instantHumidity) {
+function updateHumidity(instantHumidity) {
     const humidityElement = document.getElementById("humidityDisplay");
     if (humidityElement) {
         const humidity = instantHumidity; 

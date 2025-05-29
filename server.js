@@ -6,7 +6,7 @@ import { connectToDb } from './db.js';
 import { Humidity } from './models/Humidity.js'; 
 import { WebSocketServer, WebSocket } from 'ws';
 import http from 'http';
-import { updateHumidity } from './public/humidityLogic.js';
+//import { updateHumidity } from './public/humidityLogic.js';
 
 dotenv.config();
 
