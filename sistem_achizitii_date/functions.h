@@ -4,9 +4,11 @@
 #include <WebSocketsClient.h>
 
 void connectToNetwork();
+void setupWebSocket();
 void webSocketEvent(WStype_t type, uint8_t * payload, size_t length);
 int takeSample();
 void processAndSend(int &sum, int &reads);
+void sendHumidity(int humidity);
 
 extern const int SENSOR_PIN;
 extern const int MOTOR_PIN;

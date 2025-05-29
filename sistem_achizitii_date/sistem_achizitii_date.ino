@@ -25,6 +25,7 @@ void setup() {
   digitalWrite(MOTOR_PIN, LOW);
 
   connectToNetwork();
+  setupWebSocket();
 }
 
 void loop() {

@@ -42,6 +42,11 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
   }
 }
 
+void setupWebSocket() {
+  webSocket.beginSSL(wsUrl, 443, "/");
+  webSocket.onEvent(webSocketEvent);
+  webSocket.setReconnectInterval(5000);
+}
 
 int takeSample() {
   int rawValue = analogRead(SENSOR_PIN);
@@ -97,3 +102,12 @@ void processAndSend(int &sum, int &reads) {
   }
 }
 
+void sendHumidity(int humidity) {
+  DynamicJsonDocument doc(128);
+  doc["event"] = "humidity";
+  doc["value"] = humidity;
+
+  String message;
+  serializeJson(doc, message);
+  webSocket.sendTXT(message);
+}

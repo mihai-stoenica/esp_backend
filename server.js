@@ -4,8 +4,9 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { connectToDb } from './db.js'; 
 import { Humidity } from './models/Humidity.js'; 
-import { WebSocketServer } from 'ws';
+import { WebSocketServer, WebSocket } from 'ws';
 import http from 'http';
+import { updateHumidity } from './public/humidityLogic.js';
 
 dotenv.config();
 
@@ -73,9 +74,8 @@ wss.on('connection', (ws, req) => {
       const data = JSON.parse(message.toString());
 
       if (data.event === 'humidity' && typeof data.value === 'number') {
-        const humidityDoc = new Humidity({ humidity: data.value });
-        await humidityDoc.save();
-        console.log(`Humidity saved: ${data.value}`);
+        console.log(`Received humidity: ${data.value}`);
+        updateHumidity(data.value);
 
         for (const client of clients) {
           if (client !== ws && client.readyState === ws.OPEN) {
