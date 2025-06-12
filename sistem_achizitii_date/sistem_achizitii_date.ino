@@ -6,8 +6,8 @@ const char* password = "6db1c892";
 const char* serverUrl = "https://espbackend-production.up.railway.app/api/humidity"; 
 const char* wsUrl = "espbackend-production.up.railway.app";
 
-const int dryValue = 3500;
-const int wetValue = 800;
+const int dryValue = 2600;
+const int wetValue = 900;
 
 const int SENSOR_PIN = 34;     
 const int MOTOR_PIN = 33;
@@ -38,8 +38,9 @@ void loop() {
 
   if (now - lastSendTime >= sendInterval) {
     int currentHumidity = takeSample();
+    lastSendTime = now;
     if(currentHumidity != lastSentHumidity) {
-      lastSendTime = now;
+      
       sendHumidity(currentHumidity);
       lastSentHumidity = currentHumidity;
     }

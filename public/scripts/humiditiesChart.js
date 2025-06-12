@@ -5,7 +5,7 @@ let chart;
 
 async function fetchHumidityData() {
     try {
-        const response = await fetch('https://espbackend-production.up.railway.app/api/log');
+        const response = await fetch('https://esp-backend-y2j3.onrender.com/api/log');
         if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
         const data = await response.json();
         console.log('Raw API data:', data);
